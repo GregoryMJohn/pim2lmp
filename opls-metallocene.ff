@@ -1,0 +1,189 @@
+!OPLS-AA Force Field Parameters
+
+$atoms 
+!Type  Name   Mass      Charge  Element  Connections   Comment
+!---- ----- ----------  ------  -------  ------------ ---------------------------
+  135    CT    12.0110  -0.180     C         1C,3H     Alkane methyl carbon
+  136    CT    12.0110   0.139     C         2C,2H     Secondary alkane CH2 sp3 carbon
+  139    CT    12.0110  -1.020     C         4C        Quaternary alkane sp3 carbon
+  140    HC     1.0080   0.340     H         1C        H, RH, alkanes
+  145    CA    12.0110  -0.180     C         2C,1*     Aromatic sp2 carbon in benzene
+  146    HA     1.0080  -0.060     H         1C        Hydrogen bonded to benzene carbon
+  166    CA    12.0110   0.040     C         2C,1O     Aromatic sp2 carbon in phenol bonded to OH
+  167    OH    15.9994   0.145     O         1C,1H     Hydroxyl oxygen in phenol
+  168    HO     1.0080   0.205     H         1O        Hydroxyl hydrogen in phenol
+  186    OS    15.9994   0.265     O         2C        Ether oxygen
+  260    CA    12.0110   0.035     C         3C        Aromatic carbon bonded to CN in benzonitrile
+  261    CZ    12.0110   0.395     C         2C        Triple bonded sp carbon
+  262    NZ    14.0067  -0.430     N         1C        Cyano group nitrogen in benzonitrile
+  996    PS     1.0080   0.000     PS        1C,1Fe    Pseudoatom connecting Fe2+ to cyclopentadienyl ring in ferrocene  
+  997    Fe    55.8470   0.100     Fe        2PS       Fe(II) metallocenter in ferrocene
+  998    CA5   12.0110  -0.100     C         2C,1*     Aromatic sp2 carbon in ferrocene
+  999    HA5   12.0110   0.090     H         1C        Hydrogen bonded ferrocene carbon
+$end
+
+
+$lj
+! E = 4 * epsilon * [(sigma/r)^12 - (sigma/r)^6]
+! I         sigma         epsilon
+!----    -----------   -----------
+  135       3.50          0.0660            
+  136       3.50          0.0660                  
+  139       3.50          0.0660            
+  140       2.50          0.0300            
+  145       3.55          0.0700            
+  146       2.42          0.0300            
+  166       3.55          0.0700            
+  167       3.07          0.1700              
+  168       0.00          0.0000              
+  186       2.90          0.1400              
+  260       3.55          0.0700              
+  261       3.65          0.1500              
+  262       3.20          0.1700
+  996       0.00          0.0000  
+  997       3.11          0.4820
+  998       3.55          0.0700    
+  999       2.42          0.0300
+$end
+
+$bonds
+! E = K2 * (R - R0)^2
+! I     J          R0         K2
+!----  ----     -------    --------
+  CA    OH       1.3640       900  
+  CA    OS       1.3640       900 
+  CA    CA       1.4000       938 
+  CA    CT       1.5100       634    
+  CA    HA       1.0800       734   
+  CA    CZ       1.4510       800 
+  CZ    NZ       1.1570      1300  
+  CZ    CZ       1.2100      2300
+  CT    CT       1.5290       536  
+  CT    HC       1.0900       680
+  HO    OH       0.0945      1106
+  CA5   CA5      1.4400       938
+  CA5   HA5      1.0800       734
+  CA5   CZ       1.4510       800
+  PS    Fe       1.7000      2390
+ $end
+
+$angles
+! E = K2 * (Theta - Theta0)^2
+! I      J      K       Theta0        K2
+!----   ----   ----    ---------   --------
+  HC     CT     CZ      108.500       70.0   
+  CT     CT     CZ      112.700      116.7   
+  CT     CZ     CZ      180.000      300.0   
+  CA     CZ     CZ      180.000      320.0   
+  HC     CZ     CZ      180.000      224.0   
+  CA     CA     CZ      120.000      140.0   
+  CT     CT     CT      112.700      116.7   
+  CT     CT     HC      110.700       75.0   
+  HC     CT     HC      107.800       66.0      
+  CA     CA     CA      120.000      126.0   
+  CA     CA     CT      120.000      140.0   
+  CA     CA     HA      120.000       70.0   
+  CA     CT     CT      114.000      126.0   
+  CA     CT     HC      109.500       70.0   
+  CT     CZ     NZ      180.000      300.0   
+  CA     CZ     NZ      180.000      300.0   
+  CA     CA     OH      120.000      140.0   
+  CA     CA     OS      120.000      140.0
+  CA     CT     CA      109.500       80.0
+  CA     OS     CA      111.000      150.0
+  CA     OH     HO      113.000       70.0
+  CA5    CA5    CA5     108.000      126.0
+  CA5    CA5    HA5     126.000       70.0
+  CA5    CA5    CZ      126.000      140.0
+  CA5    CZ     CZ      180.000      300.0
+  CA5    PS     Fe       90.000      240.0
+  PS     Fe     PS      180.000      240.0
+  PS     CA5    CA5      54.000      240.0
+  PS     CA5    HA5     180.000      240.0 
+$end
+
+$torsions
+! OPLS-AA Style:
+! E = 0.5*K1*[1 + cos(Phi)] + 0.5*K2*[1 + cos(2*Phi)] + 0.5*K3*[1 + cos(3*Phi)] + 0.5*K4*[1 + cos(4*Phi)]
+! I     J     K     L          K1          K2          K3         K4
+!----  ----  ----  ----      -------     -------     -------    -------
+  CA	  CA	  CT	  CT			 0.00000		 0.00000		 0.00000		0.00000
+  CA	  CA	  CT	  HC			 0.00000		 0.00000		 0.00000		0.00000
+  CA	  CA	  OH	  HO			 0.00000		 1.68200		 0.00000		0.00000
+  CA	  CA	  OS	  CT			 0.00000		 3.00000		 0.00000		0.00000
+  CA	  CT	  CT	  CT			 1.30000		-0.05000		 0.20000		0.00000
+  CA	  CT	  CT	  HC			 0.00000		 0.00000		 0.46200		0.00000
+  CA	  CT	  CT	  OH			 1.71100		-0.50000		 0.66300		0.00000
+  CA	  CT	  CT	  OS			 1.71100		-0.50000		 0.66300		0.00000
+  CA	  CT	  OH	  HO			-0.90000		 0.00000		 0.00000		0.00000
+  CA	  CT	  OS	  CT			 0.65000		-0.25000		 0.67000		0.00000
+  CA	  OS	  CT	  CT			 0.65000		-0.25000		 0.67000		0.00000
+  CA	  OS	  CT	  CA			 0.65000		-0.25000		 0.67000		0.00000
+  CA	  OS	  CT	  HC			 0.00000		 0.00000		 0.76000		0.00000
+  CT	  CT	  CT	  CT			 1.30000		-0.05000		 0.20000		0.00000
+  CT	  CT	  CT	  HC			 0.00000		 0.00000		 0.30000		0.00000
+  CT	  CT	  CT	  OH			 1.71100		-0.50000		 0.66300		0.00000
+  CT	  CT	  CT	  OS			 1.71100		-0.50000		 0.66300		0.00000
+  CT	  CT	  CZ	  CZ			 0.00000		 0.00000		 0.00000		0.00000
+  CT	  CT	  OH	  HO			-0.35601		-0.17400		 0.49200		0.00000
+  CT	  CT	  OS	  CT			 0.65000		-0.25000		 0.67000		0.00000
+  CT	  OS	  CT	  HC			 0.00000		 0.00000		 0.76000		0.00000
+  CT	  OS	  CT	  OH			-0.52100		-2.01800		 1.99600		0.00000
+  CT	  OS	  CT	  OS			-0.52100		-2.01800		 1.99600		0.00000
+  CZ	  CT	  CT	  HC			 0.00000		 0.00000		 0.36600		0.00000
+  CZ	  CZ	  CT	  HC			 0.00000		 0.00000		 0.00000		0.00000
+  HC	  CT	  CT	  HC			 0.00000		 0.00000		 0.30000		0.00000
+  HC	  CT	  CT	  OH			 0.00000		 0.00000		 0.46800		0.00000
+  HC	  CT	  CT	  OS			 0.00000		 0.00000		 0.46800		0.00000
+  HC	  CT	  OH	  HO			 0.00000		 0.00000		 0.45000		0.00000
+  OH	  CT	  CT	  OH			 9.06601		 0.00000		 0.00000		0.00000
+  OH	  CT	  CT	  OS			 4.31900		 0.00000		 0.00000		0.00000
+  OS	  CT	  CT	  OS			-0.55000		 0.00000		 0.00000		0.00000
+  CA	  CA	  CT	  OH			 0.00000		 0.00000		 0.00000		0.00000
+  CA	  CA	  CT	  OS			 0.00000		 0.00000		 0.00000		0.00000
+  CZ	  CT	  CT	  OH			 1.71100		-0.50000		 0.66300		0.00000
+  CZ	  CT	  CT	  OS			 1.71100		-0.50000		 0.66300		0.00000
+  CA    CA    CT    CA       0.00000     0.00000     0.00000    0.00000
+  CT	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  CT	  CA    CA    HA       0.00000     7.25000     0.00000    0.00000
+  CA	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  HA	  CA    CA    HA       0.00000     7.25000     0.00000    0.00000
+  HA	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  CA	  CA    OS    CA       0.00000     7.25000     0.00000    0.00000
+  HA	  CA    OS    CA       0.00000     7.25000     0.00000    0.00000
+  CT	  CA    CA    CT       0.00000     7.25000     0.00000    0.00000
+  OS	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  OS	  CA    CA    CZ       0.00000     7.25000     0.00000    0.00000
+  OH	  CA    CA    CZ       0.00000     7.25000     0.00000    0.00000
+  OS	  CA    CA    OS       0.00000     7.25000     0.00000    0.00000
+  OS	  CA    CA    HA       0.00000     7.25000     0.00000    0.00000
+  OH	  CA    CA    OH       0.00000     7.25000     0.00000    0.00000
+  OH	  CA    CA    HA       0.00000     7.25000     0.00000    0.00000
+  OH	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  CZ	  CA    CA    HA       0.00000     7.25000     0.00000    0.00000
+  CZ	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  NZ	  CZ    CA    CA       0.00000     0.00000     0.00000    0.00000
+  CZ    CZ    CA    CA       0.00000     0.00000     0.00000    0.00000
+  CA5	  CA5   CA5   CA5      0.00000     7.25000     0.00000    0.00000
+  CA5   CA5   CA5   HA5      0.00000     7.25000     0.00000    0.00000
+  HA5	  CA5   CA5   HA5      0.00000     7.25000     0.00000    0.00000
+  CA5   CA5   CA5   CZ       0.00000     7.25000     0.00000    0.00000
+  HA5	  CA5   CA5   CZ       0.00000     7.25000     0.00000    0.00000
+  CA5	  CA5   CZ    CZ       0.00000     0.00000     0.00000    0.00000
+  HA5   CA5   CZ    CZ       0.00000     0.00000     0.00000    0.00000
+  CA5   CZ    CZ    CA       0.00000     0.00000     0.00000    0.00000
+! CHARMM Style:
+! deltaE = K[1 + cos(n*Phi - d)]
+! I     J     K     L          K           n           d           wf
+!----  ----  ----  ----      -------     -------     -------    -------
+  CA5   PS    PS    CA5       0.072        5          -180        1.0
+$end
+
+$impropers
+!
+! I     J     K     L         Theta       K         n   
+!----  ----  ----  ----      -------   -------   -------
+  HA    CA    CA    CA        180.0      1.1        2
+  HA5   CA5   CA5   CA5       180.0      1.1        2
+  PS    CA5   CA5   CA5      -180.0      8.0        2
+$end 
