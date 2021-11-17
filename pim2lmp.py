@@ -615,7 +615,7 @@ def getAngleCoeffs(angleTypes,force_field):
 
 	for n in angleTypes:
 		for angtype in force_field.angles:
-			if set((angtype.i,angtype.j,angtype.k)) == set(angleTypes[n]):
+			if [angtype.i,angtype.j,angtype.k] in [angleTypes[n],angleTypes[n][::-1]]:
 				angc[n] = [angtype.K,angtype.theta0]
 
 
@@ -722,6 +722,9 @@ def getTorsions(Laplacian,atomList):
 				for t in tlist:
 					if any([a == b for a in ['HC','PS','Fe'] for b in (atomList[str(t[0])].atom_type[1], atomList[str(t[3])].atom_type[1])]):
 						continue
+
+					elif any([atomList[str(t_atom)].atom_type[1] == 'PS' for t_atom in t]):
+						continue
 					else:
 						if not t in mlist and not t[::-1] in mlist and not any([atomList[str(t_atom)].atom_type[1] == 'CZ' for t_atom in t[1:3]]): 
 							mlist.append(t)
@@ -742,6 +745,7 @@ def getTorsions(Laplacian,atomList):
 	#					mlist.append(t)
 	#					print(t)
 
+
 	for a in atomList:
 		if atomList[a].element == "Fe":
 			iron = atomList[a]
@@ -757,7 +761,7 @@ def getTorsions(Laplacian,atomList):
 	for tor in mlist:			
 		torsions+=1
 		if any([ atomList[str(atom)].atom_type[1] == 'PS' for atom in tor ]):
-			torsion_list.append(Torsion(torsions,list(map(str,tor)),style="charmm"))
+			torsion_list.append(Torsion(torsions,list(map(str,tor)),style="fourier"))
 
 		else:
 			torsion_list.append(Torsion(torsions,list(map(str,tor)),style="opls"))	
