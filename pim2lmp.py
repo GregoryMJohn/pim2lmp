@@ -1,3 +1,6 @@
+#!/bin/python
+
+import os
 import numpy as np
 import math
 import argparse
@@ -18,7 +21,7 @@ parser.add_argument("output",help='the root name of the LAMMPS data and input fi
 parser.add_argument("--ff",nargs='?',default="opls-metallocene",help='Which force field to use for the simulation')
 parser.add_argument("-v",default='1',help='Verbosity level: set to 0 to run silently, 1 for low, 2 for medium, and 3 for high output and debugging')
 args = parser.parse_args()
-pdb,infile,datafile,frc,verbosity = args.pdb,args.output + ".in",args.output + ".data",args.ff + ".ff",int(args.v) 
+pdb,infile,datafile,frc,verbosity = args.pdb,args.output + ".in",args.output + ".data", os.environ["PIM2LMPHOME"]+"/" + args.ff + ".ff",int(args.v) 
 
 
 def rot_x(angle,vector):
@@ -461,20 +464,20 @@ def getBondAngles(atomList):
 				if len(atom.bonds) > 1:
 					angles_list = [Angle([ atomList[str(bonded_atom)],atom,atomList[str(other_atom)] ]) for bonded_atom in atom.bonds for other_atom in atom.bonds if bonded_atom!=other_atom]
 
-					if atom.element == 'PS':
-						iron_atom = str(getBondedByElem(atom.index,atomList,'Fe')[0])
-						carbon_1 = str(getBondedByElem(atom.index,atomList,'C')[0])
-						ring_carbons = []
-						ring_carbons.append(carbon_1)
-						for x in atomList[carbon_1].bonds:
-							if atomList[str(x)].element == 'C':
-								ring_carbons.append(str(x))
-								for y in atomList[str(x)].bonds:
-									if atomList[str(y)].element == 'C' and not str(y) in ring_carbons:
-										ring_carbons.append(str(y))
+					#if atom.element == 'PS':
+					#	iron_atom = str(getBondedByElem(atom.index,atomList,'Fe')[0])
+					#	carbon_1 = str(getBondedByElem(atom.index,atomList,'C')[0])
+					#	ring_carbons = []
+					#	ring_carbons.append(carbon_1)
+					#	for x in atomList[carbon_1].bonds:
+					#		if atomList[str(x)].element == 'C':
+					#			ring_carbons.append(str(x))
+					#			for y in atomList[str(x)].bonds:
+					#				if atomList[str(y)].element == 'C' and not str(y) in ring_carbons:
+					#					ring_carbons.append(str(y))
 
-						for carbon_atom in ring_carbons:
-							angles_list.append(Angle([ atomList[carbon_atom], atom, atomList[iron_atom] ]))
+					#	for carbon_atom in ring_carbons:
+					#		angles_list.append(Angle([ atomList[carbon_atom], atom, atomList[iron_atom] ]))
 
 					for angle in angles_list:
 						for other_angle in angles_list:
@@ -720,24 +723,36 @@ def getTorsions(Laplacian,atomList):
 					if any([a == b for a in ['HC','PS','Fe'] for b in (atomList[str(t[0])].atom_type[1], atomList[str(t[3])].atom_type[1])]):
 						continue
 					else:
-						if not t in mlist and not t[::-1] in mlist:
+						if not t in mlist and not t[::-1] in mlist and not any([atomList[str(t_atom)].atom_type[1] == 'CZ' for t_atom in t[1:3]]): 
 							mlist.append(t)
 		bar()
 
 	
 
-	molecules = int(max([atomList[n].molecule for n in atomList]))
-	print(molecules)
-	for molecule in range(1,molecules + 1):
-		for a in atomList:
-			atom1 = atomList[a]
-			for b in atomList:
-				atom2 = atomList[b]
-				if all([a!=b, atom1.atom_type[1] == 'PS', atom2.atom_type[1] == 'PS', int(atom1.molecule) == molecule, int(atom2.molecule) == molecule]):
-					t =[int(getBondedByElem(atom1.index,atomList,'C')[0]),int(atom1.index),int(atom2.index),int(getBondedByElem(atom2.index,atomList,'C')[0])]
-					if not t in mlist and not t[::-1] in mlist:
-						mlist.append(t)
-						print(t)
+	#molecules = int(max([atomList[n].molecule for n in atomList]))
+	#print(molecules)
+	#for molecule in range(1,molecules + 1):
+	#	for a in atomList:
+	#		atom1 = atomList[a]
+	#		for b in atomList:
+	#			atom2 = atomList[b]
+	#			if all([a!=b, atom1.atom_type[1] == 'PS', atom2.atom_type[1] == 'PS', int(atom1.molecule) == molecule, int(atom2.molecule) == molecule]):
+	#				t =[int(getBondedByElem(atom1.index,atomList,'C')[0]),int(atom1.index),int(atom2.index),int(getBondedByElem(atom2.index,atomList,'C')[0])]
+	#				if not t in mlist and not t[::-1] in mlist:
+	#					mlist.append(t)
+	#					print(t)
+
+	for a in atomList:
+		if atomList[a].element == "Fe":
+			iron = atomList[a]
+			ps1 = iron.bonds[0]
+			ps2 = iron.bonds[1]
+			c1 = int(getBondedByElem(str(ps1),atomList,'C')[0])
+			c2 = int(getBondedByElem(str(ps2),atomList,'C')[0])
+			t = [c1, ps1, ps2, c2]
+			if not t in mlist and not t[::-1] in mlist:
+				mlist.append(t)
+				print(t)
 
 	for tor in mlist:			
 		torsions+=1
@@ -986,8 +1001,10 @@ with open(datafile,'w') as datafh:
 
 					#Impropers
 					improperList = getImpropers(anglesDict,atomList)
+					improper_coeffs = getImproperTypesAndCoeffs(improperList,force_field,atomList)
+
 					impropers = len(improperList)
-					improper_types = 1
+					improper_types = len(improper_coeffs)
 
 					datafh.writelines([str(atoms)," atoms\n",
 									   str(bonds)," bonds\n",
@@ -1087,7 +1104,7 @@ with open(datafile,'w') as datafh:
 
 	datafh.write("Impropers\n\n")
 	for improper in improperList:
-		datafh.write(str(improper.index)+"\t"+"1\t"+" ".join(improper.atoms)+"\n")
+		datafh.write(str(improper.index)+"\t"+str(improper.type)+"\t"+" ".join(improper.atoms)+"\n")
 	datafh.write("\n")
 
 	bondCoeffs = getBondCoeffs(bondTypes,force_field)
@@ -1110,7 +1127,6 @@ with open(datafile,'w') as datafh:
 	datafh.write("\n")
 
 	datafh.write("Improper Coeffs #harmonic\n\n")
-	improper_coeffs = getImproperTypesAndCoeffs(improperList,force_field,atomList)
 	for entry in improper_coeffs:
 		datafh.write(str(entry)+"\t"+"\t".join(improper_coeffs[entry])+"\n")
 	datafh.write("\n")

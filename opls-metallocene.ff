@@ -7,7 +7,7 @@ $atoms
   136    CT    12.0110   0.139     C         2C,2H     Secondary alkane CH2 sp3 carbon
   139    CT    12.0110  -1.020     C         4C        Quaternary alkane sp3 carbon
   140    HC     1.0080   0.340     H         1C        H, RH, alkanes
-  145    CA    12.0110  -0.180     C         2C,1*     Aromatic sp2 carbon in benzene
+  145    CA    12.0110  -0.180     C         2C,1H     Aromatic sp2 carbon in benzene
   146    HA     1.0080  -0.060     H         1C        Hydrogen bonded to benzene carbon
   166    CA    12.0110   0.040     C         2C,1O     Aromatic sp2 carbon in phenol bonded to OH
   167    OH    15.9994   0.145     O         1C,1H     Hydroxyl oxygen in phenol
@@ -100,6 +100,7 @@ $angles
   PS     Fe     PS      180.000      240.0
   PS     CA5    CA5      54.000      240.0
   PS     CA5    HA5     180.000      240.0 
+  CZ     CA5    PS      180.000      240.0
 $end
 
 $torsions
