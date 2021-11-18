@@ -481,13 +481,17 @@ def getBondAngles(atomList):
 
 					for angle in angles_list:
 						for other_angle in angles_list:
-							if set(angle.atoms) == set(other_angle.atoms) and angle!=other_angle:
+							if angle.atoms == other_angle.atoms and angle!=other_angle:
 								angles_list.remove(other_angle)
 
-						if not angle in angleDict.values():
+						if angle.atom_types == ['CA5','PS','CA5']: 
+							angles_list.remove(angle)
+						elif not angle in angleDict.values():
 							angles+=1
 							angle.index = angles
 							angleDict[angles] = angle
+
+						
 			bar()
 	
 				#for bonded_atom in atom.bonds:
@@ -625,32 +629,10 @@ def getAngleCoeffs(angleTypes,force_field):
 
 	return angc 
 
-	#angleCoeffs = {}
-	#for n in angleTypes:
-	#	atom_types = angleTypes[n]
-	#	for angtype in force_field.angles:
-	#		if all([if atom1 == atom2 for atom2 in (angtype.i,angtype.j,angtype.k) for atom1 in atom_types])
-#
-	#for n in angleTypes:
-	#	atom_types = angleTypes[n]
-	#	for angtype in force_field.angles:
-	#		
-	#		if set([angtype.i,angtype.j,angtype.k]) == set(atom_types):
-	#			if verbosity > 2: print("Found angle coefficients")
-	#			angleCoeffs[n] = [angtype.K, angtype.theta0]
-#
-	#return angleCoeffs 
-
-
 def getLJ(atomTypeDict,force_field):
 	start = timeit.default_timer()
 	if verbosity > 0: print(".....\n.....\n***** Getting Lennard-Jones parameters *****\n********************************************")
 
-	#ljp = [[atom.atom,atom.sigma,atom.epsilon] for atom in force_field.lj for atype in atomTypeDict if str(atype) == atom.atom]
-	
-	
-
-	#return dict(zip(list(atomTypeDict.values()),ljp))
 	ljpDict = {}
 	for atom in force_field.lj:
 		for atype in atomTypeDict:

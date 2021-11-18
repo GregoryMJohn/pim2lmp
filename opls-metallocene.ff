@@ -60,7 +60,7 @@ $bonds
   CZ    CZ       1.2100      2300
   CT    CT       1.5290       536  
   CT    HC       1.0900       680
-  HO    OH       0.0945      1106
+  HO    OH       0.9450      1106
   CA5   CA5      1.4400       938
   CA5   HA5      1.0800       734
   CA5   CZ       1.4510       800
@@ -102,7 +102,6 @@ $angles
   PS     CA5    CA5      54.000      240.0
   PS     CA5    HA5     180.000      240.0 
   CZ     CA5    PS      180.000      240.0
-  CA5    PS     CA5      72.000      240.0
 $end
 
 $torsions
