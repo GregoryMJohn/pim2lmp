@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/python
 
 import os
 import numpy as np
@@ -217,7 +217,6 @@ class ImpropersParams:
 		self.l = line[3]
 		self.theta = line[4]
 		self.K = line[5]
-		self.n = line[6]
 
 class ForceField:
 	def __init__(self,frc):
@@ -481,17 +480,17 @@ def getBondAngles(atomList):
 
 					for angle in angles_list:
 						for other_angle in angles_list:
-							if angle.atoms == other_angle.atoms and angle!=other_angle:
+							if set(angle.atoms) == set(other_angle.atoms) and angle!=other_angle:
 								angles_list.remove(other_angle)
 
-						if angle.atom_types == ['CA5','PS','CA5']: 
+						if angle.atom_types == ['CA5','PS','CA5']:
+							print(angle.atom_types)
 							angles_list.remove(angle)
+
 						elif not angle in angleDict.values():
 							angles+=1
 							angle.index = angles
 							angleDict[angles] = angle
-
-						
 			bar()
 	
 				#for bonded_atom in atom.bonds:
@@ -569,18 +568,18 @@ def getImpropers(angleDict,atomList):
 			angle = angleDict[n]
 			if not False in [bool(atom.atom_type[1] in ['CA','CA5']) for atom in angle.atoms]:
 				for bonded_atom in angle.vertex.bonds:
-					if atomList[str(bonded_atom)].atom_type[1] in ['HA','HA5']:
+					if atomList[str(bonded_atom)].atom_type[1] in ['HA','HA5','PS','CZ']:
 						improper = [str(bonded_atom)]
 						for atom in angle.atoms:
 							improper.append(str(atom.index))
 						impropers+=1
 						impropersList.append(Improper(impropers,improper))
-					if atomList[str(bonded_atom)].atom_type[1] == 'PS':
-						improper = [str(bonded_atom)]
-						for atom in angle.atoms:
-							improper.append(str(atom.index))
-						impropers+=1
-						impropersList.append(Improper(impropers,improper))
+					#if atomList[str(bonded_atom)].atom_type[1] == 'PS':
+					#	improper = [str(bonded_atom)]
+					#	for atom in angle.atoms:
+					#		improper.append(str(atom.index))
+					#	impropers+=1
+					#	impropersList.append(Improper(impropers,improper))
 			bar()
 
 	stop = timeit.default_timer()
@@ -619,7 +618,7 @@ def getAngleCoeffs(angleTypes,force_field):
 
 	for n in angleTypes:
 		for angtype in force_field.angles:
-			if [angtype.i,angtype.j,angtype.k] in [angleTypes[n],angleTypes[n][::-1]]:
+			if [angtype.i,angtype.j,angtype.k] in [angleTypes[n], angleTypes[n][::-1]]:
 				angc[n] = [angtype.K,angtype.theta0]
 
 
@@ -629,10 +628,32 @@ def getAngleCoeffs(angleTypes,force_field):
 
 	return angc 
 
+	#angleCoeffs = {}
+	#for n in angleTypes:
+	#	atom_types = angleTypes[n]
+	#	for angtype in force_field.angles:
+	#		if all([if atom1 == atom2 for atom2 in (angtype.i,angtype.j,angtype.k) for atom1 in atom_types])
+#
+	#for n in angleTypes:
+	#	atom_types = angleTypes[n]
+	#	for angtype in force_field.angles:
+	#		
+	#		if set([angtype.i,angtype.j,angtype.k]) == set(atom_types):
+	#			if verbosity > 2: print("Found angle coefficients")
+	#			angleCoeffs[n] = [angtype.K, angtype.theta0]
+#
+	#return angleCoeffs 
+
+
 def getLJ(atomTypeDict,force_field):
 	start = timeit.default_timer()
 	if verbosity > 0: print(".....\n.....\n***** Getting Lennard-Jones parameters *****\n********************************************")
 
+	#ljp = [[atom.atom,atom.sigma,atom.epsilon] for atom in force_field.lj for atype in atomTypeDict if str(atype) == atom.atom]
+	
+	
+
+	#return dict(zip(list(atomTypeDict.values()),ljp))
 	ljpDict = {}
 	for atom in force_field.lj:
 		for atype in atomTypeDict:
@@ -707,9 +728,9 @@ def getTorsions(Laplacian,atomList):
 
 					elif any([atomList[str(t_atom)].atom_type[1] == 'PS' for t_atom in t]):
 						continue
-					else:
-						if not t in mlist and not t[::-1] in mlist and not any([atomList[str(t_atom)].atom_type[1] == 'CZ' for t_atom in t[1:3]]): 
-							mlist.append(t)
+
+					if not t in mlist and not t[::-1] in mlist and not any([atomList[str(t_atom)].atom_type[1] == 'CZ' for t_atom in t[1:3]]): 
+						mlist.append(t)
 		bar()
 
 	
@@ -726,7 +747,6 @@ def getTorsions(Laplacian,atomList):
 	#				if not t in mlist and not t[::-1] in mlist:
 	#					mlist.append(t)
 	#					print(t)
-
 
 	for a in atomList:
 		if atomList[a].element == "Fe":
@@ -839,13 +859,13 @@ def getImproperTypesAndCoeffs(impropersList,force_field,atomList):
 					improper_types+=1
 					improper.type = improper_types
 					improper_type_dict[improper_types] = [imp_type.i,imp_type.j,imp_type.k,imp_type.l]
-					improper.coeffs = [imp_type.K,imp_type.theta,imp_type.n]
+					improper.coeffs = [imp_type.K,imp_type.theta]
 
 				else:
 					for key in improper_type_dict:
 						if improper_type_dict[key] == [imp_type.i,imp_type.j,imp_type.k,imp_type.l]:
 							improper.type = key
-							improper.coeffs = [imp_type.K,imp_type.theta,imp_type.n]
+							improper.coeffs = [imp_type.K,imp_type.theta]
 
 				type_coeff_dict[improper.type] = improper.coeffs
 
