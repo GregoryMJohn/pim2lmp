@@ -923,16 +923,17 @@ with open(datafile,'w') as datafh:
 					termPositions.add(int(current_line[1]))
 
 				elif current_line[0] == "END":
-					#Update bonds
 					
 					if boxDefined == False:
-						xyz_lo = getMinXYZ(atomList)
-						for i in range(len(xyz_lo)):
-							xyz_lo[i] -= 5.0
+						xyz_lo = [min(getMinXYZ(atomList))-5.00] * 3
 
-						xyz_hi = getMaxXYZ(atomList)
-						for i in range(len(xyz_hi)):
-							xyz_hi[i] += 5.0
+						#for i in range(len(xyz_lo)):
+						#	xyz_lo[i] -= 5.0
+
+						xyz_hi = [max(getMaxXYZ(atomList))+5.00] * 3
+
+						#for i in range(len(xyz_hi)):
+						#	xyz_hi[i] += 5.0
 
 					else:
 						xyz_lo = [0,0,0]
