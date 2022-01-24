@@ -13,7 +13,7 @@ $atoms
   167    OH    15.9994  -0.585     O         1C,1H     Hydroxyl oxygen in phenol
   168    HO     1.0080   0.435     H         1O        Hydroxyl hydrogen in phenol
   186    OS    15.9994  -0.300     O         2C        Ether oxygen
-  260    CA    12.0110  -0.115     C         3C        Aromatic carbon bonded to C%C-R alkyne in MPIM backbone
+  260    CA    12.0110   0.000     C         3C        Aromatic carbon bonded to C%C-R alkyne in MPIM backbone
   261    CZ    12.0110   0.395     C         1C,1N     Triple bonded sp carbon in benzonitrile
   262    NZ    14.0067  -0.430     N         1C        Cyano group nitrogen in benzonitrile
   931    CZ    12.0110   0.1075    C         2C        Alkyne sp C in R1-C%C-R2, where R1 = CA5 and R2 = CA
@@ -186,9 +186,9 @@ $impropers
 !
 ! I     J     K     L         Theta       K      
 !----  ----  ----  ----      -------   -------   
-  HA    CA    CA    CA        180.0      1.1  
-  CZ    CA    CA    CA        180.0      1.1
-  HA5   CA5   CA5   CA5       180.0      1.1     
-  PS    CA5   CA5   CA5         0.0      1.1
-  CZ    CA5   CA5   CA5       180.0      1.1     
+  HA    CA    CA    CA        180.0      64.0  
+  CZ    CA    CA    CA        180.0      64.0
+  HA5   CA5   CA5   CA5       180.0      64.0     
+  PS    CA5   CA5   CA5         0.0      64.0
+  CZ    CA5   CA5   CA5       180.0      64.0     
 $end 
