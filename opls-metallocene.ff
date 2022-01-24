@@ -17,10 +17,10 @@ $atoms
   261    CZ    12.0110   0.395     C         1C,1N     Triple bonded sp carbon in benzonitrile
   262    NZ    14.0067  -0.430     N         1C        Cyano group nitrogen in benzonitrile
   931    CZ    12.0110   0.1075    C         2C        Alkyne sp C in R1-C%C-R2, where R1 = CA5 and R2 = CA
-  996    PS     1.0080   0.000     PS        5C,1Fe    Pseudoatom connecting Fe2+ to cyclopentadienyl ring in ferrocene  
+  996    PS    12.0110   0.000     PS        5C,1Fe    Pseudoatom connecting Fe2+ to cyclopentadienyl ring in ferrocene  
   997    Fe    55.8470   0.100     Fe        2PS       Fe(II) metallocenter in ferrocene
   998    CA5   12.0110  -0.100     C         2C,1*     Aromatic sp2 carbon in ferrocene
-  999    HA5   12.0110   0.090     H         1C        Hydrogen bonded ferrocene carbon
+  999    HA5    1.0080   0.090     H         1C        Hydrogen bonded ferrocene carbon
 $end
 
 
