@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python3
 
 import os
 import numpy as np
@@ -9,6 +9,7 @@ from scipy import sparse
 import timeit
 from alive_progress import alive_bar
 from alive_progress import config_handler
+from textwrap import wrap
 
 config_handler.set_global(bar='classic2')
 
@@ -18,11 +19,12 @@ startTime = timeit.default_timer()
 parser = argparse.ArgumentParser(description='Build LAMMPS input file from .pdb',add_help=True)
 parser.add_argument("pdb",help='A .pdb file to provide coordinates and atoms types for the LAMMPS input file')
 parser.add_argument("output",help='the root name of the LAMMPS data and input files to be generated')
-parser.add_argument("--ff",nargs='?',default="opls-metallocene",help='Which force field to use for the simulation')
+parser.add_argument("-ff",nargs='?',default="opls-metallocene",help='Which force field to use for the simulation')
 parser.add_argument("-v",default='1',help='Verbosity level: set to 0 to run silently, 1 for low, 2 for medium, and 3 for high output and debugging')
+parser.add_argument("-input",help='If the -input flag is provided, an LAMMPS input file will be written in addition to the data file',action="store_true")
 args = parser.parse_args()
 pdb,infile,datafile,frc,verbosity = args.pdb,args.output + ".in",args.output + ".data", os.environ["PIM2LMPHOME"]+"/" + args.ff + ".ff",int(args.v) 
-
+write_infile = args.input
 
 def rot_x(angle,vector):
 	
@@ -241,16 +243,16 @@ def getAdjacencyMatrix(pdb):
 				atoms+=1
 	
 			#Read the bonds and create adjacency matrix
-			if "CONECT" in line:
-				current_line = line.split()
+			elif "CONECT" in line:
+				current_line = list(map(int,re.findall('.....',line[6:])))
 				
 				#If the line begins the bonds section of the PDB, create an ajacency matrix, A, full of zeroes 
-				if current_line[1] == "1":
+				if current_line[0] == 1:
 					A = np.zeros(shape=(atoms,atoms), dtype=np.uint8)
 	
 				#Populate the adjacency matrix with ones for bonds between atoms in the PDB 
-				i = int(current_line[1]) - 1
-				J = list(map(int,current_line[2:]))
+				i = current_line[0] - 1
+				J = current_line[1:]
 				J = [j-1 for j in J]
 	
 				for j in J:
@@ -342,15 +344,14 @@ def getAtomTypes(A,atomList,force_field):
 								isBondedToCZ = False
 								
 								for bonded_atom in atom.bonds:
-									for bonded_atom2 in atomList[str(bonded_atom)].bonds:
-										if atomList[str(bonded_atom2)].element == 'N':
-											isBondedToCZ = True
-											break
+									if atomList[str(bonded_atom)].element == 'C' and len(atomList[str(bonded_atom)].bonds) == 2:
+										isBondedToCZ = True
+										break
 
 								if isBondedToCZ == True and all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]) and atype.type == '260':
 									atom.atom_type = [atype.type,atype.name]
 								elif isBondedToCZ == False and all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] or elem == 'X' for elem in atype.connections]):
-										atom.atom_type = [atype.type,atype.name]
+									atom.atom_type = [atype.type,atype.name]
 								
 								if verbosity > 2: print(atom.atom_type)
 								for bonded_atom in atom.bonds:
@@ -395,7 +396,10 @@ def numberOfBondedX_byType(atom_index,atomList,atom_type):
 def getCharges(atom,force_field):
 	for atype in force_field.atoms:
 		if str(atom.atom_type[0]) == atype.type:
-			atom.charge = atype.charge  
+			atom.charge = atype.charge
+
+		if atom.atom_type[1] == 'CA5' and numberOfBondedX_byElem(atom.index,atomList,'C') == 3:
+			atom.charge = '-0.010'  
 
 def getBonds(A,atomList):
 	start = timeit.default_timer()
@@ -484,7 +488,7 @@ def getBondAngles(atomList):
 								angles_list.remove(other_angle)
 
 						if angle.atom_types == ['CA5','PS','CA5']:
-							print(angle.atom_types)
+							if verbosity > 2: print(angle.atom_types)
 							angles_list.remove(angle)
 
 						elif not angle in angleDict.values():
@@ -536,7 +540,10 @@ def getAngleTypes(anglesDict,atomList):
 	
 	stop = timeit.default_timer()
 	print(".....\n..... Got angle types in",'%.3g' % (stop-start)+"s")
-	for n in angleTypeDict: print(n,angleTypeDict[n])
+	
+	if verbosity > 2: 
+		for n in angleTypeDict: 
+			print(n,angleTypeDict[n])
 
 	return angleTypeDict
 
@@ -753,12 +760,13 @@ def getTorsions(Laplacian,atomList):
 			iron = atomList[a]
 			ps1 = iron.bonds[0]
 			ps2 = iron.bonds[1]
-			c1 = int(getBondedByElem(str(ps1),atomList,'C')[0])
-			c2 = int(getBondedByElem(str(ps2),atomList,'C')[0])
-			t = [c1, ps1, ps2, c2]
-			if not t in mlist and not t[::-1] in mlist:
-				mlist.append(t)
-				print(t)
+			c1 = map(int, getBondedByElem(str(ps1),atomList,'C'))
+			c2 = map(int, getBondedByElem(str(ps2),atomList,'C'))
+			t_list = [[a, ps1, ps2, b] for a in c1 for b in c2]
+			for t in t_list:
+				if not t in mlist and not t[::-1] in mlist:
+					mlist.append(t)
+					if verbosity > 2: print(t)
 
 	for tor in mlist:			
 		torsions+=1
@@ -799,7 +807,7 @@ def getTorsionTypes(dihedralList,atomList,force_field):
 
 	for n,torsion in enumerate(dihedralList,start=1):
 		atom_types = [atomList[str(atom)].atom_type[1] for atom in torsion.atoms]
-		print(n,atom_types)
+		if verbosity > 2: print(n,atom_types)
 		for entry in force_field.torsions:
 			if entry.atoms in [atom_types,atom_types[::-1]]:
 				#if not entry.atoms in torsionTypes.values() and not entry.atoms[::-1] in torsionTypes.values():
@@ -807,7 +815,7 @@ def getTorsionTypes(dihedralList,atomList,force_field):
 					torsion_types+=1
 					torsionTypes[torsion_types] = [entry.atoms,torsion.style]
 					torsion.type = torsion_types
-					print(entry.atoms)
+					if verbosity > 2: print(entry.atoms)
 				else:
 					for ttype in torsionTypes:
 						if torsionTypes[ttype][0] in [entry.atoms,entry.atoms[::-1]]:
@@ -908,15 +916,18 @@ with open(datafile,'w') as datafh:
 			else:
 				current_line = line.split()
 				
-				if current_line[0] == "ATOM" or current_line[0] == "HETATM":
-					atoms+=1
-					if boxDefined == True:
-						current_atom_type = "".join(re.split("[^a-zA-Z]*", current_line[11]))
-						atomList[str(atoms)] = Atom(str(atoms),[current_line[6],current_line[7],current_line[8]],current_atom_type)
+				#if "ATOM" in line or "HETATM" in line:
+					#atoms+=1
+					#if boxDefined == True:
+						#current_atom_type = "".join(re.split("[^a-zA-Z]*", current_line[11]))
+						#atomList[str(atoms)] = Atom(str(atoms),[current_line[6],current_line[7],current_line[8]],current_atom_type)
 
-					else:
-						current_atom_type = "".join(re.split("[^a-zA-Z]*", current_line[-1]))
-						atomList[str(atoms)] = Atom(str(atoms),current_line[-6:-3],current_atom_type,molecule=str(current_line[-7]))
+					#else:
+						#current_atom_type = "".join(re.split("[^a-zA-Z]*", current_line[-1]))
+						#atomList[str(atoms)] = Atom(str(atoms),current_line[-6:-3],current_atom_type,molecule=str(current_line[-7]))
+
+				if "HETATM" in line:
+					atomList[str(int(line[6:11]))] = Atom(line[6:11].strip(), [coord.strip() for coord in re.findall('........',line[30:54])], line[76:78].strip(), molecule=line[22:26].strip())
                          
 				if current_line[0] == "TER":
 					residues+=1
@@ -941,7 +952,7 @@ with open(datafile,'w') as datafh:
 
 					#Get Adjacency Matrix
 					adjacency_matrix = getAdjacencyMatrix(pdb)
-					
+					A_sparse = sparse.csr_matrix(adjacency_matrix)
 					#Get Bonds
 					getBonds(adjacency_matrix,atomList)
 
@@ -957,25 +968,27 @@ with open(datafile,'w') as datafh:
 					#Get Masses
 					getMasses(atomList,force_field)
 
-					#Get Charges
+					#Get Charges and append atom types
 					if verbosity > 0: print(".....\n.....\n***** Getting charges *****\n**************************")
 					start = timeit.default_timer()
 					with alive_bar(len(atomList)) as bar:
 						for atom in atomList:
 							getCharges(atomList[atom],force_field)
+							atom_types_list.append(atomList[atom].atom_type[0])
 							bar()
 
 					stop = timeit.default_timer()
 					print(".....\n..... Got charges in",'%.3g' % (stop-start)+"s")
 
-					for atom in atomList:
-						atom_types_list.append(atomList[atom].atom_type[0])
+					#for atom in atomList:
+					#	atom_types_list.append(atomList[atom].atom_type[0])
 
 					atom_types_set = set(atom_types_list)
 					atom_types = len(atom_types_set)
 
 					#Bond Types
-					bonds = sum([sum(row[i+1:]) for i,row in enumerate(adjacency_matrix)])
+					#bonds = sum([sum(row[i+1:]) for i,row in enumerate(adjacency_matrix)])
+					bonds = A_sparse.sum()
 					bondTypes = getBondTypes(atomList)
 					bond_types = len(bondTypes)
 
@@ -1055,8 +1068,9 @@ with open(datafile,'w') as datafh:
 	datafh.write("\n")
 	datafh.write("Pair Coeffs\n\n")
 	ljParams = getLJ(atomTypeDict,force_field)
-	for params in ljParams:
-		print(params,ljParams[params])
+	if verbosity > 2:
+		for params in ljParams:
+			print(params,ljParams[params])
 
 	for i,atom in enumerate(atomTypeDict,start=1):
 		atom_type = str(atom)
@@ -1074,7 +1088,7 @@ with open(datafile,'w') as datafh:
 	bonds = 0
 	n = 0
 	if verbosity > 0: print(".....\n.....\n***** Printing bonds *****\n**************************")
-	A_sparse = sparse.csr_matrix(adjacency_matrix)
+	A_sparse = A_sparse.tocoo()
 
 	#def printBond(bond,btype):
 	#	bonds+=1
@@ -1083,16 +1097,29 @@ with open(datafile,'w') as datafh:
 #
 	#[ printBond([i,j],btype) for i,j in zip(*A_sparse.nonzero()) if j>i for btype in bondTypes if bondTypes[btype] == set([atomList[str(i+1)].atom_type[1],atomList[str(j+1)].atom_type[1]])]
 
-	A = adjacency_matrix
-	for i,row in enumerate(A):
-		for j,elem in enumerate(row):
-			if j>i and elem == 1:
-				bonds+=1
-				atom_types = set([atomList[str(i+1)].atom_type[1],atomList[str(j+1)].atom_type[1]])
-				for btype in bondTypes:
-					if bondTypes[btype] == atom_types:
-						bond_type = btype
-				datafh.write(str(bonds)+"\t"+str(bond_type)+"\t"+str(i+1)+"\t"+str(j+1)+"\n")
+	#A = adjacency_matrix
+	#for i,row in enumerate(A):
+	#	for j,elem in enumerate(row):
+	#		if j>i and elem == 1:
+	#			bonds+=1
+	#			atom_types = set([atomList[str(i+1)].atom_type[1],atomList[str(j+1)].atom_type[1]])
+	#			for btype in bondTypes:
+	#				if bondTypes[btype] == atom_types:
+	#					bond_type = btype
+	#			datafh.write(str(bonds)+"\t"+str(bond_type)+"\t"+str(i+1)+"\t"+str(j+1)+"\n")
+	#datafh.write("\n")
+
+	for i,j,v in zip(A_sparse.row, A_sparse.col, A_sparse.data):
+		if j>i and v == 1:
+			bonds+=1
+			atom_types = set([atomList[str(i+1)].atom_type[1],atomList[str(j+1)].atom_type[1]])
+
+			for btype in bondTypes:
+				if bondTypes[btype] == atom_types:
+					bond_type = btype
+
+			datafh.write(str(bonds)+"\t"+str(bond_type)+"\t"+str(i+1)+"\t"+str(j+1)+"\n")
+
 	datafh.write("\n")
 	stop = timeit.default_timer()
 	print("..... Printed bonds in ",'%.3g' % (stop-start)+"s")
@@ -1141,111 +1168,113 @@ with open(datafile,'w') as datafh:
 	#datafh.write("\n")
 
 	if verbosity > 0: print("\nFinished writing data file!\n")
+
+if write_infile:
 	if verbosity > 0: print("Writing input file:")
 
-with open(infile,'w') as infh:
-
-	infh.write("dimension 3\n"+"units real\n"+"boundary p p p\n"+"atom_style full\n")
-	infh.writelines(["pair_style lj/cut/coul/cut 15.0\n",
-					 "bond_style harmonic\n",
-					 "angle_style harmonic\n",
-					 "dihedral_style opls\n",
-					 "improper_style harmonic\n\n"])
-
-	infh.write("read_data "+datafile+"\n")
-	infh.write("\n"+"neighbor 2.0 bin\n\n\n")
-	#infh.write("# ------------------------ CVFF ------------------------------\n\n")
-	#infh.write("pair_style buck6d/coul/gauss/dsf     0.9000    12.0000\n\n")
-	infh.write("# ------------------------ Run -------------------------------\n\n")
-	infh.write('''timestep 1.0
-
-	minimize 0.0 1.0e-8 1000 100000
-
-	fix 1  all nvt temp 600.0 600.0 100.0
-	run 50000
-	unfix 1
-
-	fix 2 all nvt temp 300.0 300.0 100.0
-	run 50000
-	unfix 2
-
-	fix 3 all npt tri 987.0 987.0 1000.0 temp 300.0 300.0 100.0
-	run 50000
-	unfix 3
-
-	fix 4 all nvt temp 600.0 600.0 100.0
-	run 50000
-	unfix 4
-
-	fix 5 all nvt temp 600.0 600.0 100.0
-	run 100000
-	unfix 5
-
-	fix 6 all npt tri 29608.0 29608.0 1000.0 temp 300.0 300.0 100.0
-	run 50000
-	unfix 6
-
-	fix 7 all nvt temp 600.0 600.0 100.0 
-	run 50000
-	unfix 7
-
-	fix 8 all nvt temp 300.0 300.0 100.0
-	run 100000
-	unfix 8
-
-	fix 9 all npt tri 49346.2 49346.2 1000.0 temp 300.0 300.0 100.0
-	run 50000
-	unfix 9 
-
-	fix 10 all nvt temp 600.0 600.0 100.0
-	run 50000
-	unfix 10 
-
-	fix 11 all nvt temp 300.0 300.0 100.0
-	run 100000
-	unfix 11
-
-	fix 12 all npt tri 24673.0 24673.0 1000.0 temp 300.0 300.0 100.0
-	run 5000
-	unfix 12 
-
-	fix 13 all nvt temp 600.0 600.0 100.0 
-	run 5000
-	unfix 13
-
-	fix 14 all nvt temp 300.0 300.0 100.0 
-	run 10000
-	unfix 14
-
-	fix 15 all npt tri 4934.6 4934.6 1000.0 temp 300.0 300.0 100.0
-	run 5000
-	unfix 15
-
-	fix 16 all nvt temp 600.0 600.0 100.0
-	run 5000
-	unfix 16
-
-	fix 17 all nvt temp 300.0 300.0 100.0 
-	run 10000
-	unfix 17
-
-	fix 18 all npt tri 493.5 493.5 1000.0 temp 300.0 300.0 100.0
-	run 5000 
-	unfix 18
-
-	fix 19 all nvt temp 600.0 600.0 100.0
-	run 5000
-	unfix 19
-
-	fix 20 all nvt temp 300.0 300.0 100.0
-	run 10000
-	unfix 20
+	with open(infile,'w') as infh:
 	
-	fix 21 all npt tri 0.987 0.987 1000.0 temp 300.0 300.0 100.0
-	run 800000
-	''')
-
-	if verbosity > 0: print("Finished writing input file!\n")
-
-stopTime = timeit.default_timer()
-print('Total build time: ', '%.3g' % (stopTime-startTime)+"s")
+		infh.write("dimension 3\n"+"units real\n"+"boundary p p p\n"+"atom_style full\n")
+		infh.writelines(["pair_style lj/cut/coul/cut 15.0\n",
+						 "bond_style harmonic\n",
+						 "angle_style harmonic\n",
+						 "dihedral_style opls\n",
+						 "improper_style harmonic\n\n"])
+	
+		infh.write("read_data "+datafile+"\n")
+		infh.write("\n"+"neighbor 2.0 bin\n\n\n")
+		#infh.write("# ------------------------ CVFF ------------------------------\n\n")
+		#infh.write("pair_style buck6d/coul/gauss/dsf     0.9000    12.0000\n\n")
+		infh.write("# ------------------------ Run -------------------------------\n\n")
+		infh.write('''timestep 1.0
+	
+		minimize 0.0 1.0e-8 1000 100000
+	
+		fix 1  all nvt temp 600.0 600.0 100.0
+		run 50000
+		unfix 1
+	
+		fix 2 all nvt temp 300.0 300.0 100.0
+		run 50000
+		unfix 2
+	
+		fix 3 all npt tri 987.0 987.0 1000.0 temp 300.0 300.0 100.0
+		run 50000
+		unfix 3
+	
+		fix 4 all nvt temp 600.0 600.0 100.0
+		run 50000
+		unfix 4
+	
+		fix 5 all nvt temp 600.0 600.0 100.0
+		run 100000
+		unfix 5
+	
+		fix 6 all npt tri 29608.0 29608.0 1000.0 temp 300.0 300.0 100.0
+		run 50000
+		unfix 6
+	
+		fix 7 all nvt temp 600.0 600.0 100.0 
+		run 50000
+		unfix 7
+	
+		fix 8 all nvt temp 300.0 300.0 100.0
+		run 100000
+		unfix 8
+	
+		fix 9 all npt tri 49346.2 49346.2 1000.0 temp 300.0 300.0 100.0
+		run 50000
+		unfix 9 
+	
+		fix 10 all nvt temp 600.0 600.0 100.0
+		run 50000
+		unfix 10 
+	
+		fix 11 all nvt temp 300.0 300.0 100.0
+		run 100000
+		unfix 11
+	
+		fix 12 all npt tri 24673.0 24673.0 1000.0 temp 300.0 300.0 100.0
+		run 5000
+		unfix 12 
+	
+		fix 13 all nvt temp 600.0 600.0 100.0 
+		run 5000
+		unfix 13
+	
+		fix 14 all nvt temp 300.0 300.0 100.0 
+		run 10000
+		unfix 14
+	
+		fix 15 all npt tri 4934.6 4934.6 1000.0 temp 300.0 300.0 100.0
+		run 5000
+		unfix 15
+	
+		fix 16 all nvt temp 600.0 600.0 100.0
+		run 5000
+		unfix 16
+	
+		fix 17 all nvt temp 300.0 300.0 100.0 
+		run 10000
+		unfix 17
+	
+		fix 18 all npt tri 493.5 493.5 1000.0 temp 300.0 300.0 100.0
+		run 5000 
+		unfix 18
+	
+		fix 19 all nvt temp 600.0 600.0 100.0
+		run 5000
+		unfix 19
+	
+		fix 20 all nvt temp 300.0 300.0 100.0
+		run 10000
+		unfix 20
+		
+		fix 21 all npt tri 0.987 0.987 1000.0 temp 300.0 300.0 100.0
+		run 800000
+		''')
+	
+		if verbosity > 0: print("Finished writing input file!\n")
+	
+	stopTime = timeit.default_timer()
+	print('Total build time: ', '%.3g' % (stopTime-startTime)+"s")
