@@ -318,7 +318,7 @@ def getAtomTypes(A,atomList,force_field):
 				#Ignore H atoms, since they will be assigned types according to the atom types they are bonded to
 				if all([atom.element == atype.element,atom.element != 'H',connections == sum([atype.connections[elem] for elem in atype.connections]) ]):
 					#Ignore CA and CA5 types, as they share the same connection data
-					if not atype.name in ['CA','CA5','Fe']:
+					if not atype.name in ['CA','CA5','Fe','CZ']:
 						if all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]):
 							atom.atom_type = [atype.type,atype.name]
 
@@ -329,7 +329,19 @@ def getAtomTypes(A,atomList,force_field):
 										atomList[str(bonded_atom)].atom_type = ['140','HC']
 										
 										if verbosity > 2: print(atomList[str(bonded_atom)].index,atomList[str(bonded_atom)].atom_type)
-	
+					elif atype.name == 'CZ':
+						if numberOfBondedX_byElem(atom.index,atomList,'C') == 2 and connections == 2:
+							if any([ atomList[str(bonded_atom2)].element == 'H' for bonded_atom in atom.bonds for bonded_atom2 in atomList[str(bonded_atom)].bonds ]):
+								atom.atom_type = ['929','CZ']
+							else:
+								atom.atom_type = ['931','CZ']
+
+						elif all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]):
+							atom.atom_type = [atype.type, atype.name]
+							for bonded_atom in atom.bonds:
+								if atomList[str(bonded_atom)].element == 'H':
+									atomList[str(bonded_atom)].atom_type = ['926','HC']
+
 					elif atype.name in ['CA','CA5']:
 						if connections == 3 and (numberOfBondedX_byElem(atom.index,atomList,'C') == 3 or (numberOfBondedX_byElem(atom.index,atomList,'C') == 2 and numberOfBondedX_byElem(atom.index,atomList,'H') == 1)) or all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]):
 							if atype.name == 'CA5' and any([A3[bonded_atom1-1][bonded_atom2-1] == 1 for bonded_atom1 in atom.bonds for bonded_atom2 in atom.bonds if bonded_atom1 != bonded_atom2 ]):
@@ -365,7 +377,10 @@ def getAtomTypes(A,atomList,force_field):
 	
 				elif all([atom.element == atype.element,atom.element == 'H',not atype.name in ['HC','HA']]) and all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]):
 					if atom.atom_type == None:
-						atom.atom_type = [atype.type,atype.name]
+						if any([len(atomList[str(bonded_atom)].bonds) == 2 for bonded_atom in atom.bonds]):
+							atom.atom_type = ['926','HC']
+						else:
+							atom.atom_type = [atype.type,atype.name]
 
 					if verbosity > 2: print(atom.index,atom.atom_type)
 
@@ -738,7 +753,7 @@ def getTorsions(Laplacian,atomList):
 
 					if not t in mlist and not t[::-1] in mlist and not any([atomList[str(t_atom)].atom_type[1] == 'CZ' for t_atom in t[1:3]]): 
 						mlist.append(t)
-		bar()
+			bar()
 
 	
 
@@ -928,6 +943,7 @@ with open(datafile,'w') as datafh:
 
 				if "HETATM" in line:
 					atomList[str(int(line[6:11]))] = Atom(line[6:11].strip(), [coord.strip() for coord in re.findall('........',line[30:54])], line[76:78].strip(), molecule=line[22:26].strip())
+					atoms+=1
                          
 				if current_line[0] == "TER":
 					residues+=1

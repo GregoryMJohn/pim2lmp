@@ -16,6 +16,9 @@ $atoms
   260    CA    12.0110   0.000     C         3C        Aromatic carbon bonded to C%C-R alkyne in MPIM backbone
   261    CZ    12.0110   0.395     C         1C,1N     Triple bonded sp carbon in benzonitrile
   262    NZ    14.0067  -0.430     N         1C        Cyano group nitrogen in benzonitrile
+  925    CZ    12.0110  -0.210     C         1C,1H     Terminal alkyne C in R-C%C-H
+  926    HC     1.0080   0.200     H         1C        Terminal H in R-C%C-H
+  929    CZ    12.0110   0.010     C         2C        Alkyne C bonded to aromatic C in R-C%C-H
   931    CZ    12.0110   0.000     C         2C        Alkyne sp C in R1-C%C-R2, where R1 = CA5 and R2 = CA
   996    PS    12.0110   0.000     PS        5C,1Fe    Pseudoatom connecting Fe2+ to cyclopentadienyl ring in ferrocene  
   997    Fe    55.8470   0.100     Fe        2PS       Fe(II) metallocenter in ferrocene
@@ -41,7 +44,10 @@ $lj
   260       3.55          0.0700              
   261       3.65          0.1500              
   262       3.20          0.1700
-  931       3.30          0.0860
+  925       3.30          0.0860
+  926       2.42          0.0015
+  929       3.30          0.1000
+  931       3.30          0.2100
   996       0.00          0.0000  
   997       3.11          0.4820
   998       3.55          0.0700    
@@ -67,6 +73,7 @@ $bonds
   CA5   HA5      1.0800       734
   CA5   CZ       1.4510       800
   PS    Fe       1.7000      2390
+  CZ    HC       1.0800       840
  $end
 
 $angles
