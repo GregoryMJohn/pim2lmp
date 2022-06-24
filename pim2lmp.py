@@ -1004,7 +1004,7 @@ with open(datafile,'w') as datafh:
 
 					#Bond Types
 					#bonds = sum([sum(row[i+1:]) for i,row in enumerate(adjacency_matrix)])
-					bonds = A_sparse.sum()
+					bonds = int(A_sparse.sum() / 2)
 					bondTypes = getBondTypes(atomList)
 					bond_types = len(bondTypes)
 
