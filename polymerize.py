@@ -23,11 +23,6 @@ tail = int(input("Tail atom index: "))
 head_cap = int(input("Head cap atom index: "))
 tail_cap = int(input("Tail cap atom index: "))
 
-#head_cap = 87
-#head = 22
-#tail = 148
-#tail_cap = 149
-
 repeat_unit_lines = [line.split() for line in open(repeat_unit_xyz,'r') if line.strip()]
 
 repeat_unit_atoms = [line for line in repeat_unit_lines[2:]]
