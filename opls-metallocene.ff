@@ -1,9 +1,10 @@
-!OPLS-AA Force Field Parameters
+!OPLS-AA Force Field Parameters for Metallocene Polymers of Intrinsic Microporosity
 
 $atoms 
 !Type  Name   Mass      Charge  Element  Connections   Comment
 !---- ----- ----------  ------  -------  ------------ ---------------------------
   135    CT    12.0110  -0.180     C         1C,3H     Alkane methyl carbon
+  135    CT    12.0110  -0.180     C         1Si,3H    Alkane methyl carbon bonded to Si in TMS
   136    CT    12.0110  -0.120     C         2C,2H     Secondary alkane CH2 sp3 carbon
   139    CT    12.0110   0.000     C         4C        Quaternary alkane sp3 carbon
   140    HC     1.0080   0.060     H         1C        H, RH, alkanes
@@ -13,17 +14,33 @@ $atoms
   167    OH    15.9994  -0.585     O         1C,1H     Hydroxyl oxygen in phenol
   168    HO     1.0080   0.435     H         1O        Hydroxyl hydrogen in phenol
   186    OS    15.9994  -0.300     O         2C        Ether oxygen
+  200    SH    32.0600  -0.335     S         1C,1H,1Zn Thiol sulfur in tetrahedral Zn complex and bonded to aromatic carbon 
+  202    S     32.0600  -0.335     S         1C,1Zn    Sulfur bonded to aromatic carbon in tetrahedral Zn complex
+  204    HS     1.0800   0.155     H         1S        Hydrogen in thiol
+  216    CA    12.0110   0.2175    C         2C,1S     Aromatic carbon bonded to sulfur
   260    CA    12.0110   0.000     C         3C        Aromatic carbon bonded to C%C-R alkyne in MPIM backbone
   261    CZ    12.0110   0.395     C         1C,1N     Triple bonded sp carbon in benzonitrile
   262    NZ    14.0067  -0.430     N         1C        Cyano group nitrogen in benzonitrile
+  520    NC    14.0067  -0.678     N         2C        Nitrogen in pyridine 
+  521    CA    12.0110   0.473     C         1C,1N,1H  Carbon closest to N in pyridine
+  522    CA    12.0110  -0.447     C         2C,1H     Second carbon from N in pyridine
+  523    CA    12.0110   0.227     C         2C,1H     Carbon para to N in pyridine
+  524    HA     1.0080   0.012     H         1C        Hydrogen bonded to C1 in pyridine
+  525    HA     1.0080   0.155     H         1C        Hydrogen bonded to C2 in pyridine
+  526    HA     1.0080   0.065     H         1C        Hydrogen bonded to C3 in pyridine
   925    CZ    12.0110  -0.210     C         1C,1H     Terminal alkyne C in R-C%C-H
+  925    CZ    12.0110   0.000     C         1C,1Si    Terminal alkyne C in R-C%C-Si(CH3)3
   926    HC     1.0080   0.200     H         1C        Terminal H in R-C%C-H
   929    CZ    12.0110   0.010     C         2C        Alkyne C bonded to aromatic C in R-C%C-H
-  931    CZ    12.0110   0.000     C         2C        Alkyne sp C in R1-C%C-R2, where R1 = CA5 and R2 = CA
+  931    CZ    12.0110   0.000     C         2C        Alkyne sp C in R1-C%C-R2, where R1 is CA5 and R2 is CA
   996    PS    12.0110   0.000     PS        5C,1Fe    Pseudoatom connecting Fe2+ to cyclopentadienyl ring in ferrocene  
   997    Fe    55.8470   0.100     Fe        2PS       Fe(II) metallocenter in ferrocene
   998    CA5   12.0110  -0.100     C         2C,1*     Aromatic sp2 carbon in ferrocene
   999    HA5    1.0080   0.090     H         1C        Hydrogen bonded ferrocene carbon
+ 1000    CA    12.0110   0.485     C         2C,1N     Carbon bonded to C and N in 2,5-diethynylpyridine
+ 1001    CA    12.0110  -0.292     C         3C        Tertiary carbon in 2,5-diethynylpyridine
+ 1002    Si    28.0855   0.000     Si        4C        Tertiary silica atom in trimethylsilane (TMS) group bonded to C
+ 1003    Zn    65.3800   2.000     Zn        4*        Zinc in tetrahedral complex
 $end
 
 
@@ -40,10 +57,21 @@ $lj
   166       3.55          0.0700            
   167       3.07          0.1700              
   168       0.00          0.0000              
-  186       2.90          0.1400              
+  186       2.90          0.1400
+  200       3.60          0.0425
+  202       3.60          0.0355
+  204       0.00          0.0000 
+  216       3.50          0.0660                    
   260       3.55          0.0700              
   261       3.65          0.1500              
   262       3.20          0.1700
+  520       3.25          0.1700
+  521       3.55          0.0700       
+  522       3.55          0.0700
+  523       3.55          0.0700
+  524       2.42          0.0300
+  525       2.42          0.0300
+  526       2.42          0.0300
   925       3.30          0.0860
   926       2.42          0.0015
   929       3.30          0.1000
@@ -52,6 +80,10 @@ $lj
   997       3.11          0.4820
   998       3.55          0.0700    
   999       2.42          0.0300
+ 1000       3.55          0.0700
+ 1001       3.55          0.0700
+ 1002       4.00          0.1000
+ 1003       2.79          0.0149
 $end
 
 $bonds
@@ -74,6 +106,11 @@ $bonds
   CA5   CZ       1.4510       800
   PS    Fe       1.7000      2390
   CZ    HC       1.0800       840
+  CA    NC       1.3390       966
+  CT    Si       1.8500       200
+  CZ    Si       1.8500       200
+  Zn    S        2.185        800
+  Zn    N        1.839        800
  $end
 
 $angles
@@ -105,11 +142,33 @@ $angles
   CA5    CA5    HA5     126.000       70.0
   CA5    CA5    CZ      126.000      140.0
   CA5    CZ     CZ      180.000      300.0
-  CA5    PS     Fe       90.000      240.0
-  PS     Fe     PS      180.000      240.0
+  CA5    PS     Fe       90.000      10000.0
+  PS     Fe     PS      180.000      10000.0
   PS     CA5    CA5      54.000      240.0
-  PS     CA5    HA5     180.000      240.0 
+  PS     CA5    HA5     180.000      10000.0 
   CZ     CA5    PS      180.000      240.0
+  NC     CA     HA      116.000       70.0      
+  NC     CA     CA      124.000      140.0
+  CA     NC     CA      117.000      140.0
+  NC     CA     CZ      120.000      140.0
+  CT     Si     CT      112.700      116.7
+  CT     Si     CZ      112.700      116.7
+  HC     CT     Si      110.000       75.0
+  Si     CZ     CZ      180.000      320.0
+  S      Zn     S       109.500      250.0
+  SH     Zn     S       109.500      250.0
+  SH     Zn     SH      109.500      250.0
+  CA     Zn     S        95.250      125.0
+  CA     Zn     SH      109.500      250.0
+  CA     CA     S       119.400      170.0
+  CA     CA     SH      119.400      170.0
+  CA     SH     HS       96.000       88.0
+  CA     S      Zn       95.850      125.0
+  CA     SH     Zn       95.850      125.0
+  CA5    CA5    CT      126.000      140.0
+  CA5    CT     CT      120.000      160.0
+  CA5    CT     HC      107.800       66.0
+  PS     CA5    CT      180.000      240.0
 $end
 
 $torsions
@@ -142,6 +201,8 @@ $torsions
   CT	  OS	  CT	  OS			-0.52100		-2.01800		 1.99600		0.00000
   CZ	  CT	  CT	  HC			 0.00000		 0.00000		 0.36600		0.00000
   CZ	  CZ	  CT	  HC			 0.00000		 0.00000		 0.00000		0.00000
+  HC    CT    Si    CZ       0.00000     0.00000     0.36600    0.00000
+  HC    CT    Si    CT       0.00000     0.00000     0.30000    0.00000
   HC	  CT	  CT	  HC			 0.00000		 0.00000		 0.30000		0.00000
   HC	  CT	  CT	  OH			 0.00000		 0.00000		 0.46800		0.00000
   HC	  CT	  CT	  OS			 0.00000		 0.00000		 0.46800		0.00000
@@ -159,6 +220,10 @@ $torsions
   CA	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
   HA	  CA    CA    HA       0.00000     7.25000     0.00000    0.00000
   HA	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  CA    CA    NC    CA       0.00000     7.25000     0.00000    0.00000
+  HA    CA    NC    CA       0.00000     7.25000     0.00000    0.00000
+  NC    CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  NC    CA    CA    HA       0.00000     7.25000     0.00000    0.00000
   CA	  CA    OS    CA       0.00000     7.25000     0.00000    0.00000
   HA	  CA    OS    CA       0.00000     7.25000     0.00000    0.00000
   CT	  CA    CA    CT       0.00000     7.25000     0.00000    0.00000
@@ -172,6 +237,8 @@ $torsions
   OH	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
   CZ	  CA    CA    HA       0.00000     7.25000     0.00000    0.00000
   CZ	  CA    CA    CA       0.00000     7.25000     0.00000    0.00000
+  CZ    CA    CA    NC       0.00000     7.25000     0.00000    0.00000
+  CZ    CA    NC    CA       0.00000     7.25000     0.00000    0.00000
   NZ	  CZ    CA    CA       0.00000     0.00000     0.00000    0.00000
   CZ    CZ    CA    CA       0.00000     0.00000     0.00000    0.00000
   CA5	  CA5   CA5   CA5      0.00000     7.25000     0.00000    0.00000
@@ -182,6 +249,11 @@ $torsions
   CA5	  CA5   CZ    CZ       0.00000     0.00000     0.00000    0.00000
   HA5   CA5   CZ    CZ       0.00000     0.00000     0.00000    0.00000
   CA5   CZ    CZ    CA       0.00000     0.00000     0.00000    0.00000
+  CA5   CT    CT    HC       0.00000		 0.00000		 0.46200		0.00000
+  CA5   CA5   CT    CT       0.00000		 0.00000		 0.00000		0.00000
+  HA5   CA5   CA5   CT       0.00000     7.25000     0.00000    0.00000
+  CA5   CA5   CA5   CT       0.00000     7.25000     0.00000    0.00000
+  CA5   CT    CT    CA5      0.00000     7.25000     0.00000    0.00000
 ! FOURIER Style:
 ! deltaE = K[1 + cos(n*Phi - d)]
 ! I     J     K     L          m           K           n           d           

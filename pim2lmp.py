@@ -266,11 +266,10 @@ def getAdjacencyMatrix(pdb):
 
 def getBondedAtoms(atom_index,atomList):
 	atom = atomList[atom_index]
-	if atom.bonds is not None:
+	if atom.bonds != None:
 		return set(atom.bonds)
 	else:	
 		return None
-
 
 def getMasses(atomList,force_field):
 	start = timeit.default_timer()
@@ -303,7 +302,8 @@ def getAtomTypes(A,atomList,force_field):
 	if verbosity > 0: print(".....\n.....\n***** Getting atom types *****\n******************************")
 	A_sparse = sparse.csr_matrix(A)
 	A2_sparse = A_sparse.dot(A_sparse)
-	A3 = A2_sparse.dot(A_sparse).toarray()
+	A3_sparse = A2_sparse.dot(A_sparse).toarray()
+	
 	#Calculate degree of connectivity for each atom
 	D = getDegreeOfConnectivity(A)
 
@@ -333,18 +333,19 @@ def getAtomTypes(A,atomList,force_field):
 						if numberOfBondedX_byElem(atom.index,atomList,'C') == 2 and connections == 2:
 							if any([ atomList[str(bonded_atom2)].element == 'H' for bonded_atom in atom.bonds for bonded_atom2 in atomList[str(bonded_atom)].bonds ]):
 								atom.atom_type = ['929','CZ']
-							else:
-								atom.atom_type = ['931','CZ']
+							elif all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]):
+								atom.atom_type = [atype.type, atype.name]
 
 						elif all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]):
 							atom.atom_type = [atype.type, atype.name]
+							atom.charge = atype.charge
 							for bonded_atom in atom.bonds:
 								if atomList[str(bonded_atom)].element == 'H':
 									atomList[str(bonded_atom)].atom_type = ['926','HC']
 
 					elif atype.name in ['CA','CA5']:
 						if connections == 3 and (numberOfBondedX_byElem(atom.index,atomList,'C') == 3 or (numberOfBondedX_byElem(atom.index,atomList,'C') == 2 and numberOfBondedX_byElem(atom.index,atomList,'H') == 1)) or all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]):
-							if atype.name == 'CA5' and any([A3[bonded_atom1-1][bonded_atom2-1] == 1 for bonded_atom1 in atom.bonds for bonded_atom2 in atom.bonds if bonded_atom1 != bonded_atom2 ]):
+							if atype.name == 'CA5' and any([A3_sparse[bonded_atom1-1][bonded_atom2-1] == 1 for bonded_atom1 in atom.bonds for bonded_atom2 in atom.bonds if bonded_atom1 != bonded_atom2 ]):
 								atom.atom_type = ['998','CA5']
 								if verbosity > 2: print(atom.index,atom.atom_type)
 								for bonded_atom in atom.bonds:
@@ -360,10 +361,47 @@ def getAtomTypes(A,atomList,force_field):
 										isBondedToCZ = True
 										break
 
-								if isBondedToCZ == True and all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]) and atype.type == '260':
-									atom.atom_type = [atype.type,atype.name]
-								elif isBondedToCZ == False and all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] or elem == 'X' for elem in atype.connections]):
-									atom.atom_type = [atype.type,atype.name]
+								if isBondedToCZ == True and all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] for elem in atype.connections]):
+									if atype.type in ['260','1001']:
+										inPyridine = False
+										for bonded_atom in atom.bonds:
+											for other_atom in atomList[str(bonded_atom)].bonds:
+												if atomList[str(other_atom)].element == 'N':
+													inPyridine = True
+													break
+										if inPyridine:
+											atom.atom_type = ['1001','CA']
+										else:
+											atom.atom_type = ['260','CA']
+									else:
+										atom.atom_type = [atype.type,atype.name]
+
+								elif isBondedToCZ == False and all([numberOfBondedX_byElem(atom.index,atomList,elem) == atype.connections[elem] or elem == '*' for elem in atype.connections]):
+									if numberOfBondedX_byElem(atom.index,atomList,'N')==1 and atype.type in ['521','1000']:
+										atom.atom_type = [atype.type,atype.name]
+									else:
+										hasNTwoBondsAway = False
+										hasNThreeBondsAway = False
+
+										for bonded_atom in atom.bonds:
+											for other_atom in atomList[str(bonded_atom)].bonds:
+												if atomList[str(other_atom)].element == 'N':
+													hasNTwoBondsAway = True
+													break
+												else:
+													for third_atom in atomList[str(other_atom)].bonds:
+														if atomList[str(third_atom)].element == 'N':
+															hasNThreeBondsAway = True
+															break
+
+										if hasNTwoBondsAway:
+											atom.atom_type = ['522','CA']
+										
+										elif hasNThreeBondsAway:
+											atom.atom_type = ['523','CA']
+
+										else:
+											atom.atom_type = [atype.type,atype.name]
 								
 								if verbosity > 2: print(atom.atom_type)
 								for bonded_atom in atom.bonds:
@@ -411,7 +449,10 @@ def numberOfBondedX_byType(atom_index,atomList,atom_type):
 def getCharges(atom,force_field):
 	for atype in force_field.atoms:
 		if str(atom.atom_type[0]) == atype.type:
-			atom.charge = atype.charge
+			if atom.charge != None:
+				atom.charge = atype.charge
+			else:
+				continue
 
 		if atom.atom_type[1] == 'CA5' and numberOfBondedX_byElem(atom.index,atomList,'C') == 3:
 			atom.charge = '-0.010'  
